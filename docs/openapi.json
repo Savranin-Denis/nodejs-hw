@@ -1,0 +1,169 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "nodejs-hw",
+    "version": "1.0.0",
+    "license": {
+      "name": "ISC",
+      "url": "https://opensource.org/licenses/ISC"
+    }
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [],
+  "tags": [
+    {
+      "name": "Notes",
+      "description": "Notes endpoints."
+    },
+    {
+      "name": "Diagnostics",
+      "description": "Diagnostic endpoints."
+    }
+  ],
+  "paths": {
+    "/notes": {
+      "get": {
+        "tags": [
+          "Notes"
+        ],
+        "summary": "Retrieve all notes",
+        "description": "Returns a message confirming that all notes were retrieved.",
+        "operationId": "getNotes",
+        "responses": {
+          "200": {
+            "description": "Notes retrieval confirmation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotesResponse"
+                },
+                "example": {
+                  "message": "Retrieved all notes"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/notes/{noteId}": {
+      "get": {
+        "tags": [
+          "Notes"
+        ],
+        "summary": "Retrieve a note by ID",
+        "description": "Returns a message containing the requested note ID.",
+        "operationId": "getNoteById",
+        "parameters": [
+          {
+            "name": "noteId",
+            "in": "path",
+            "required": true,
+            "description": "The note ID included in the response message.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note retrieval confirmation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteResponse"
+                },
+                "example": {
+                  "message": "Retrieved note with ID: 123"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/test-error": {
+      "get": {
+        "tags": [
+          "Diagnostics"
+        ],
+        "summary": "Trigger a test server error",
+        "description": "Always throws a simulated error that is handled by the app-level error handler.",
+        "operationId": "triggerTestError",
+        "responses": {
+          "500": {
+            "description": "The simulated error response. In production, the message is replaced by a generic error message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "NotesResponse": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Retrieved all notes"
+          }
+        }
+      },
+      "NoteResponse": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Retrieved note with ID: 123"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "responses": {
+      "InternalServerError": {
+        "description": "The app-level error handler encountered an error. In production, the message is replaced by a generic error message.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  }
+}

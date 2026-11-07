@@ -2,9 +2,14 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import pino from 'pino-http';
+import { readFileSync } from 'node:fs';
+import swaggerUi from 'swagger-ui-express';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
+const openapiSpec = JSON.parse(
+  readFileSync(new URL('../docs/openapi.json', import.meta.url), 'utf8'),
+);
 
 app.use(express.json());
 app.use(cors());
@@ -24,6 +29,8 @@ app.use(
     },
   }),
 );
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
 
 app.get('/notes', (req, res) => {
   res.status(200).json({ message: 'Retrieved all notes' });
