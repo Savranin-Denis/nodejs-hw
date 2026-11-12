@@ -4,6 +4,7 @@ import cors from 'cors';
 import pino from 'pino-http';
 import { readFileSync } from 'node:fs';
 import swaggerUi from 'swagger-ui-express';
+import { connectMongoDB } from './db/connectMongoDB.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -57,6 +58,8 @@ app.use((err, req, res, next) => {
       : err.message,
   });
 });
+
+await connectMongoDB();
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
