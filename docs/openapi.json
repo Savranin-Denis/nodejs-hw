@@ -18,10 +18,6 @@
     {
       "name": "Notes",
       "description": "Notes endpoints."
-    },
-    {
-      "name": "Diagnostics",
-      "description": "Diagnostic endpoints."
     }
   ],
   "paths": {
@@ -31,18 +27,58 @@
           "Notes"
         ],
         "summary": "Retrieve all notes",
-        "description": "Returns a message confirming that all notes were retrieved.",
+        "description": "Returns all notes stored in the database.",
         "operationId": "getNotes",
         "responses": {
           "200": {
-            "description": "Notes retrieval confirmation.",
+            "description": "Notes retrieved successfully.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NotesResponse"
                 },
-                "example": {
-                  "message": "Retrieved all notes"
+                "example": [
+                  {
+                    "_id": "507f1f77bcf86cd799439011",
+                    "title": "Project planning",
+                    "content": "Prepare the project plan",
+                    "tag": "Work",
+                    "createdAt": "2024-01-01T00:00:00.000Z",
+                    "updatedAt": "2024-01-01T00:00:00.000Z"
+                  }
+                ]
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Notes"
+        ],
+        "summary": "Create a note",
+        "description": "Creates and returns a note.",
+        "operationId": "createNote",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Note created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteResponse"
                 }
               }
             }
@@ -59,14 +95,14 @@
           "Notes"
         ],
         "summary": "Retrieve a note by ID",
-        "description": "Returns a message containing the requested note ID.",
+        "description": "Returns the requested note.",
         "operationId": "getNoteById",
         "parameters": [
           {
             "name": "noteId",
             "in": "path",
             "required": true,
-            "description": "The note ID included in the response message.",
+            "description": "The ID of the note to retrieve.",
             "schema": {
               "type": "string"
             }
@@ -74,14 +110,136 @@
         ],
         "responses": {
           "200": {
-            "description": "Note retrieval confirmation.",
+            "description": "Note retrieved successfully.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NoteResponse"
                 },
                 "example": {
-                  "message": "Retrieved note with ID: 123"
+                  "_id": "507f1f77bcf86cd799439011",
+                  "title": "Project planning",
+                  "content": "Prepare the project plan",
+                  "tag": "Work",
+                  "createdAt": "2024-01-01T00:00:00.000Z",
+                  "updatedAt": "2024-01-01T00:00:00.000Z"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No note exists with the requested ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "message": "Note not found"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Notes"
+        ],
+        "summary": "Delete a note",
+        "description": "Deletes and returns the requested note.",
+        "operationId": "deleteNote",
+        "parameters": [
+          {
+            "name": "noteId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the note to delete.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note deleted successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No note exists with the requested ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "message": "Note not found"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Notes"
+        ],
+        "summary": "Update a note",
+        "description": "Updates and returns the requested note. Mongoose update validators are not enabled.",
+        "operationId": "updateNote",
+        "parameters": [
+          {
+            "name": "noteId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the note to update.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Note updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No note exists with the requested ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "message": "Note not found"
                 }
               }
             }
@@ -91,53 +249,106 @@
           }
         }
       }
-    },
-    "/test-error": {
-      "get": {
-        "tags": [
-          "Diagnostics"
-        ],
-        "summary": "Trigger a test server error",
-        "description": "Always throws a simulated error that is handled by the app-level error handler.",
-        "operationId": "triggerTestError",
-        "responses": {
-          "500": {
-            "description": "The simulated error response. In production, the message is replaced by a generic error message.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
     "schemas": {
       "NotesResponse": {
-        "type": "object",
-        "required": [
-          "message"
-        ],
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Retrieved all notes"
-          }
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/NoteResponse"
         }
       },
       "NoteResponse": {
         "type": "object",
         "required": [
-          "message"
+          "_id",
+          "title",
+          "content",
+          "tag",
+          "createdAt",
+          "updatedAt"
         ],
         "properties": {
-          "message": {
+          "_id": {
             "type": "string",
-            "example": "Retrieved note with ID: 123"
+            "example": "507f1f77bcf86cd799439011"
+          },
+          "title": {
+            "type": "string",
+            "example": "Project planning"
+          },
+          "content": {
+            "type": "string",
+            "example": "Prepare the project plan"
+          },
+          "tag": {
+            "type": "string",
+            "example": "Work"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-01T00:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-01T00:00:00.000Z"
+          }
+        }
+      },
+      "CreateNoteRequest": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Required; leading and trailing whitespace is trimmed.",
+            "example": "Project planning"
+          },
+          "content": {
+            "type": "string",
+            "description": "Leading and trailing whitespace is trimmed.",
+            "default": "",
+            "example": "Prepare the project plan"
+          },
+          "tag": {
+            "type": "string",
+            "enum": [
+              "Work",
+              "Personal",
+              "Meeting",
+              "Shopping",
+              "Ideas",
+              "Travel",
+              "Finance",
+              "Health",
+              "Important",
+              "Todo"
+            ],
+            "default": "Todo",
+            "example": "Work"
+          }
+        }
+      },
+      "UpdateNoteRequest": {
+        "type": "object",
+        "description": "Fields are optional. The route does not enable Mongoose update validators, so model validation rules such as the tag enum are not enforced.",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Project planning"
+          },
+          "content": {
+            "type": "string",
+            "example": "Prepare the project plan"
+          },
+          "tag": {
+            "type": "string",
+            "example": "Work"
           }
         }
       },
