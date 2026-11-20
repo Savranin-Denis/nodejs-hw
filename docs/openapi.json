@@ -27,8 +27,63 @@
           "Notes"
         ],
         "summary": "Retrieve all notes",
-        "description": "Returns all notes stored in the database.",
+        "description": "Returns a paginated list of notes stored in the database. Results can be filtered by tag and search text.",
         "operationId": "getNotes",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "The page number.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "required": false,
+            "description": "The number of notes per page.",
+            "schema": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 20,
+              "default": 10
+            }
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "required": false,
+            "description": "Filters notes by tag.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Work",
+                "Personal",
+                "Meeting",
+                "Shopping",
+                "Ideas",
+                "Travel",
+                "Finance",
+                "Health",
+                "Important",
+                "Todo"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Filters notes by matching text in title or content.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Notes retrieved successfully.",
@@ -37,16 +92,32 @@
                 "schema": {
                   "$ref": "#/components/schemas/NotesResponse"
                 },
-                "example": [
-                  {
-                    "_id": "507f1f77bcf86cd799439011",
-                    "title": "Project planning",
-                    "content": "Prepare the project plan",
-                    "tag": "Work",
-                    "createdAt": "2024-01-01T00:00:00.000Z",
-                    "updatedAt": "2024-01-01T00:00:00.000Z"
-                  }
-                ]
+                "example": {
+                  "page": 1,
+                  "perPage": 10,
+                  "totalNotes": 1,
+                  "totalPages": 1,
+                  "notes": [
+                    {
+                      "_id": "507f1f77bcf86cd799439011",
+                      "title": "Project planning",
+                      "content": "Prepare the project plan",
+                      "tag": "Work",
+                      "createdAt": "2024-01-01T00:00:00.000Z",
+                      "updatedAt": "2024-01-01T00:00:00.000Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query parameters failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
               }
             }
           },
@@ -83,6 +154,16 @@
               }
             }
           },
+          "400": {
+            "description": "The request body failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
           }
@@ -102,7 +183,7 @@
             "name": "noteId",
             "in": "path",
             "required": true,
-            "description": "The ID of the note to retrieve.",
+            "description": "The MongoDB ObjectId of the note to retrieve. Validated with mongoose.isValidObjectId.",
             "schema": {
               "type": "string"
             }
@@ -123,6 +204,16 @@
                   "tag": "Work",
                   "createdAt": "2024-01-01T00:00:00.000Z",
                   "updatedAt": "2024-01-01T00:00:00.000Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The note ID failed ObjectId validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -157,7 +248,7 @@
             "name": "noteId",
             "in": "path",
             "required": true,
-            "description": "The ID of the note to delete.",
+            "description": "The MongoDB ObjectId of the note to delete. Validated with mongoose.isValidObjectId.",
             "schema": {
               "type": "string"
             }
@@ -170,6 +261,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The note ID failed ObjectId validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -204,7 +305,7 @@
             "name": "noteId",
             "in": "path",
             "required": true,
-            "description": "The ID of the note to update.",
+            "description": "The MongoDB ObjectId of the note to update. Validated with mongoose.isValidObjectId.",
             "schema": {
               "type": "string"
             }
@@ -227,6 +328,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The note ID or request body failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -254,9 +365,42 @@
   "components": {
     "schemas": {
       "NotesResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/NoteResponse"
+        "type": "object",
+        "required": [
+          "page",
+          "perPage",
+          "totalNotes",
+          "totalPages",
+          "notes"
+        ],
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "perPage": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 20,
+            "example": 10
+          },
+          "totalNotes": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoteResponse"
+            }
+          }
         }
       },
       "NoteResponse": {
@@ -284,6 +428,18 @@
           },
           "tag": {
             "type": "string",
+            "enum": [
+              "Work",
+              "Personal",
+              "Meeting",
+              "Shopping",
+              "Ideas",
+              "Travel",
+              "Finance",
+              "Health",
+              "Important",
+              "Todo"
+            ],
             "example": "Work"
           },
           "createdAt": {
@@ -300,12 +456,14 @@
       },
       "CreateNoteRequest": {
         "type": "object",
+        "additionalProperties": false,
         "required": [
           "title"
         ],
         "properties": {
           "title": {
             "type": "string",
+            "minLength": 1,
             "description": "Required; leading and trailing whitespace is trimmed.",
             "example": "Project planning"
           },
@@ -337,9 +495,12 @@
       "UpdateNoteRequest": {
         "type": "object",
         "description": "Fields are optional. The route does not enable Mongoose update validators, so model validation rules such as the tag enum are not enforced.",
+        "additionalProperties": false,
+        "minProperties": 1,
         "properties": {
           "title": {
             "type": "string",
+            "minLength": 1,
             "example": "Project planning"
           },
           "content": {
@@ -348,6 +509,18 @@
           },
           "tag": {
             "type": "string",
+            "enum": [
+              "Work",
+              "Personal",
+              "Meeting",
+              "Shopping",
+              "Ideas",
+              "Travel",
+              "Finance",
+              "Health",
+              "Important",
+              "Todo"
+            ],
             "example": "Work"
           }
         }
