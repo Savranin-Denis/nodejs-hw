@@ -16,11 +16,264 @@
   "security": [],
   "tags": [
     {
+      "name": "Auth",
+      "description": "Authentication endpoints."
+    },
+    {
       "name": "Notes",
       "description": "Notes endpoints."
     }
   ],
   "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register a user",
+        "description": "Creates a user and a session.",
+        "operationId": "registerUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully.",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Sets accessToken, refreshToken, and sessionId cookies.",
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request failed validation or the email is already in use.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "emailInUse": {
+                    "value": {
+                      "message": "Email in use"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Log in a user",
+        "description": "Authenticates a user and creates a session.",
+        "operationId": "loginUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User logged in successfully.",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Sets accessToken, refreshToken, and sessionId cookies.",
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid email or password.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "message": "Invalid credentials"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Refresh a user session",
+        "description": "Replaces the current session using the session ID and refresh token cookies.",
+        "operationId": "refreshUserSession",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "cookie",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "refreshToken",
+            "in": "cookie",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session refreshed successfully.",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Sets replacement accessToken, refreshToken, and sessionId cookies.",
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponse"
+                },
+                "example": {
+                  "message": "Session refreshed"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The session was not found or the refresh token has expired.",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Expired sessions clear accessToken, refreshToken, and sessionId cookies.",
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Log out a user",
+        "description": "Deletes the current session and clears authentication cookies.",
+        "operationId": "logoutUser",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User logged out successfully.",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Clears accessToken, refreshToken, and sessionId cookies.",
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
     "/notes": {
       "get": {
         "tags": [
@@ -29,6 +282,11 @@
         "summary": "Retrieve all notes",
         "description": "Returns a paginated list of notes stored in the database. Results can be filtered by tag and search text.",
         "operationId": "getNotes",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "page",
@@ -103,6 +361,7 @@
                       "title": "Project planning",
                       "content": "Prepare the project plan",
                       "tag": "Work",
+                      "userId": "507f1f77bcf86cd799439012",
                       "createdAt": "2024-01-01T00:00:00.000Z",
                       "updatedAt": "2024-01-01T00:00:00.000Z"
                     }
@@ -113,6 +372,16 @@
           },
           "400": {
             "description": "The query parameters failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The access token is missing, unknown, or expired.",
             "content": {
               "application/json": {
                 "schema": {
@@ -133,6 +402,11 @@
         "summary": "Create a note",
         "description": "Creates and returns a note.",
         "operationId": "createNote",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -164,6 +438,16 @@
               }
             }
           },
+          "401": {
+            "description": "The access token is missing, unknown, or expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
           }
@@ -178,6 +462,11 @@
         "summary": "Retrieve a note by ID",
         "description": "Returns the requested note.",
         "operationId": "getNoteById",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "noteId",
@@ -202,6 +491,7 @@
                   "title": "Project planning",
                   "content": "Prepare the project plan",
                   "tag": "Work",
+                  "userId": "507f1f77bcf86cd799439012",
                   "createdAt": "2024-01-01T00:00:00.000Z",
                   "updatedAt": "2024-01-01T00:00:00.000Z"
                 }
@@ -210,6 +500,16 @@
           },
           "400": {
             "description": "The note ID failed ObjectId validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The access token is missing, unknown, or expired.",
             "content": {
               "application/json": {
                 "schema": {
@@ -243,6 +543,11 @@
         "summary": "Delete a note",
         "description": "Deletes and returns the requested note.",
         "operationId": "deleteNote",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "noteId",
@@ -267,6 +572,16 @@
           },
           "400": {
             "description": "The note ID failed ObjectId validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The access token is missing, unknown, or expired.",
             "content": {
               "application/json": {
                 "schema": {
@@ -300,6 +615,11 @@
         "summary": "Update a note",
         "description": "Updates and returns the requested note. Mongoose update validators are not enabled.",
         "operationId": "updateNote",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "noteId",
@@ -342,6 +662,16 @@
               }
             }
           },
+          "401": {
+            "description": "The access token is missing, unknown, or expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "No note exists with the requested ID.",
             "content": {
@@ -363,7 +693,101 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "accessToken",
+        "description": "Authentication cookie set by registration or login."
+      }
+    },
     "schemas": {
+      "RegisterUserRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "example": "password123"
+          }
+        }
+      },
+      "LoginUserRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123"
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "required": [
+          "_id",
+          "username",
+          "email",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "507f1f77bcf86cd799439011"
+          },
+          "username": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-01T00:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-01T00:00:00.000Z"
+          }
+        }
+      },
+      "RefreshResponse": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Session refreshed"
+          }
+        }
+      },
       "NotesResponse": {
         "type": "object",
         "required": [
@@ -410,6 +834,7 @@
           "title",
           "content",
           "tag",
+          "userId",
           "createdAt",
           "updatedAt"
         ],
@@ -417,6 +842,10 @@
           "_id": {
             "type": "string",
             "example": "507f1f77bcf86cd799439011"
+          },
+          "userId": {
+            "type": "string",
+            "example": "507f1f77bcf86cd799439012"
           },
           "title": {
             "type": "string",
