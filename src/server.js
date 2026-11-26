@@ -9,6 +9,7 @@ import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import notesRoutes from './routes/notesRoutes.js';
 import { errors } from 'celebrate';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -19,6 +20,7 @@ const openapiSpec = JSON.parse(
 app.use(express.json());
 app.use(cors());
 app.use(logger);
+app.use(cookieParser);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
 
