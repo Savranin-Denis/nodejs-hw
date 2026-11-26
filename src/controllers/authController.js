@@ -54,10 +54,6 @@ export const loginUser = async (req, res) => {
 export const refreshUserSession = async (req, res) => {
   const { sessionId, refreshToken } = req.cookies;
 
-  if (!sessionId || !refreshToken) {
-    throw createHttpError(401, 'Missing session credentials');
-  }
-
   const session = await Session.findOne({
     _id: sessionId,
     refreshToken,
