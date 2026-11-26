@@ -6,9 +6,7 @@ const userShema = new Schema(
     email: { type: String, unique: true, required: true, trim: true },
     password: { type: String, required: true, minlength: 8 },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
 
 userShema.pre('save', function () {
